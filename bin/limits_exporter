@@ -4,7 +4,7 @@ from limits_exporter import start_server
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--clouds", help="comma seperated list of clouds to use", required=True)
+    parser.add_argument("--clouds", help="comma seperated list of clouds to use", default=None)
     parser.add_argument("--interval", help="interval between scrapes", type=int, default=10)
     parser.add_argument("--port", help="port on which metrics are exposed", type=int, default=9500)
     args = parser.parse_args()

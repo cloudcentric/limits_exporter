@@ -2,6 +2,7 @@ from functools import reduce
 from time import sleep
 
 from openstack import connect
+from openstack.config import OpenStackConfig
 from prometheus_client import start_http_server
 from prometheus_client.core import GaugeMetricFamily, REGISTRY
 
@@ -94,9 +95,16 @@ class LimitCollector():
         yield metric
 
 
-def start_server(port, interval, clouds):
+def start_server(port, interval, cloud_names):
+    clouds = []
+    if cloud_names is None:
+        for cloud in OpenStackConfig().get_all():
+            clouds.append(cloud.name)
+    else:
+        clouds = cloud_names.split(",")
+
     conns = []
-    for cloud in clouds.split(","):
+    for cloud in clouds:
         conns.append(Connection(cloud))
 
     for name in LIMITS:

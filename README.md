@@ -14,12 +14,10 @@ The exporter needs a `clouds.yaml` file, which is located at:
 - `./clouds.yaml`
 - or at a custom location set with `export OS_CLIENT_CONFIG_FILE=/path/to/clouds.yaml`
 
-For running the exporter you need to specify the `--clouds cloud1,cloud2,...` argument,
-which is a comma seperated list of the cloud names in your `clouds.yaml`
-
-Other optional arguments are:
-- `--interval` the scrape interval in seconds
-- `--port` the port on which the server runs
+Optional arguments are:
+- `--clouds` only use clouds in comma-seperated list from `clouds.yaml` (default all)
+- `--interval` the scrape interval in seconds (default 10s)
+- `--port` the port on which the server runs (default 9500)
 
 ## More Information
 - https://docs.openstack.org/python-openstackclient/latest/configuration/index.html
