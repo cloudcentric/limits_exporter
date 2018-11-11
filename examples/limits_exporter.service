@@ -1,0 +1,16 @@
+[Unit]
+Description=prometheus limits exporter for openstack
+After=network.target
+
+[Service]
+Type=simple
+User={{ user }}
+Group={{ group }}
+ExecStart={{ venv }}/bin/limits_exporter
+ExecReload=/bin/kill -HUP $MAINPID
+
+SyslogIdentifier=limits-exporter
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
