@@ -1,17 +1,25 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
 
+def readme():
+    with open('README.md') as f:
+        return f.read()
+
 setup(
+    version='0.0.3',
     name='limits-exporter',
-    version='0.0.2',
-    include_package_data = True,
-    packages = find_packages(),
+    description = "prometheus exporter for openstack compute limits in projects",
+    long_description = readme(),
+    url = "https://github.com/cloudcentric/limits_exporter",
     author = "Felix Ehrenpfort",
     author_email = "felix.ehrenpfort@codecentric.cloud",
-    description = "prometheus exporter for openstack compute limits in projects",
-    url = "https://github.com/cloudcentric/limits_exporter",
-    package_data = {},
+    packages = find_packages(),
+    include_package_data = True,
     scripts=['bin/limits_exporter'],
-    install_requires=[],
+    license='MIT',
+    install_requires=[
+        'openstacksdk',
+        'prometheus-client',
+    ],
     zip_safe=False
 )
