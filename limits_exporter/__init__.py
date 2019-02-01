@@ -8,44 +8,26 @@ from prometheus_client.core import GaugeMetricFamily, REGISTRY
 
 
 # metrics
-# openstack_limit_cores[project_id='', view='max']
-# openstack_limit_cores[project_id='', view='used']
-# openstack_limit_floating_ips[project_id='', view='max']
-# openstack_limit_floating_ips[project_id='', view='used']
-# openstack_limit_instances[project_id='', view='max']
-# openstack_limit_instances[project_id='', view='used']
-# openstack_limit_ram[project_id='', view='max']
-# openstack_limit_ram[project_id='', view='used']
-# openstack_limit_security_groups[project_id='', view='max']
-# openstack_limit_security_groups[project_id='', view='used']
-# openstack_limit_server_groups[project_id='', view='max']
-# openstack_limit_server_groups[project_id='', view='used']
+# openstack_limit_max{project_id="", limit="cores"}
+# openstack_limit_used{project_id="", limit="cores"}
 
 LIMITS = {
-    'cores': [
-        {'view': 'max', 'attribute': 'max_total_cores'},
-        {'view': 'used', 'attribute': 'total_cores_used'}
-    ],
-    'floating_ips': [
-        {'view': 'max', 'attribute': 'properties.maxTotalFloatingIps'},
-        {'view': 'used', 'attribute': 'properties.totalFloatingIpsUsed'}
-    ],
-    'instances': [
-        {'view': 'max', 'attribute': 'max_total_instances'},
-        {'view': 'used', 'attribute': 'total_instances_used'}
-    ],
-    'ram': [
-        {'view': 'max', 'attribute': 'max_total_ram_size'},
-        {'view': 'used', 'attribute': 'total_ram_used'}
-    ],
-    'security_groups': [
-        {'view': 'max', 'attribute': 'properties.maxSecurityGroups'},
-        {'view': 'used', 'attribute': 'properties.totalSecurityGroupsUsed'}
-    ],
-    'server_groups': [
-        {'view': 'max', 'attribute': 'max_server_groups'},
-        {'view': 'used', 'attribute': 'total_server_groups_used'}
-    ]
+    'max': {
+        'cores': 'max_total_cores',
+        'floating_ips': 'properties.maxTotalFloatingIps',
+        'instances': 'max_total_instances',
+        'ram': 'max_total_ram_size',
+        'security_groups': 'properties.maxSecurityGroups',
+        'server_groups': 'max_server_groups'
+    },
+    'used': {
+        'cores': 'total_cores_used',
+        'floating_ips': 'properties.totalFloatingIpsUsed',
+        'instances': 'total_instances_used',
+        'ram': 'total_ram_used',
+        'security_groups': 'properties.totalSecurityGroupsUsed',
+        'server_groups': 'total_server_groups_used'
+    }
 }
 
 def rget(obj, key, *args):
@@ -72,24 +54,25 @@ class LimitCollector():
     conns = {}
     name = ""
 
-    def __init__(self, conns, name):
+    def __init__(self, conns, name, limits):
         self.conns = conns
         self.name = name
+        self.limits = limits
 
     def collect(self):
         metric = GaugeMetricFamily(
             "openstack_limit_%s" % self.name,
-            "openstack limit for %s in project" % self.name,
-            labels=["project_id", "view"]
+            "openstack limits %s in project" % self.name,
+            labels=["project_id", "limit"]
         )
 
         for conn in self.conns:
-            limits = conn.get_compute_limits()
+            compute = conn.get_compute_limits()
 
-            for val in LIMITS[self.name]:
+            for limit in self.limits:
                 metric.add_metric(
-                    [rget(limits, 'location.project.id'), val['view']],
-                    rget(limits, val['attribute'])
+                    [rget(compute, 'location.project.id'), limit],
+                    rget(compute, self.limits[limit])
                 )
 
         yield metric
@@ -107,9 +90,10 @@ def start_server(port, interval, cloud_names):
     for cloud in clouds:
         conns.append(Connection(cloud))
 
-    for name in LIMITS:
-        collector = LimitCollector(conns, name)
-        REGISTRY.register(collector)
+    collector_max = LimitCollector(conns, 'max', LIMITS['max'])
+    collector_used = LimitCollector(conns, 'used', LIMITS['used'])
+    REGISTRY.register(collector_max)
+    REGISTRY.register(collector_used)
 
     start_http_server(port)
 

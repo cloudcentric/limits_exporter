@@ -6,7 +6,7 @@ def readme():
         return f.read()
 
 setup(
-    version='0.0.3',
+    version='0.1.0',
     name='limits-exporter',
     description = "prometheus exporter for openstack compute limits in projects",
     long_description = readme(),
